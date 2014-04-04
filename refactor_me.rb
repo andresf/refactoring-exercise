@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 # This is a simple refactoring exercise.
 #
 # What to do?
 #
 # 1. Look at the code of the class CorrectAnswerBehavior
-# 2. Try to see what it does by running `ruby refactoring_example.rb` 
+# 2. Try to see what it does by running `ruby refactoring_example.rb`
 # 3. Record characterisation tests by running `ruby refactoring_example.rb --record`
 # 4. Make the code beautiful;)
 # 5. You are allowed to modify only the code between markers (REFACTORING START/REFACTORING END).
@@ -20,7 +21,7 @@
 #  ruby refactoring_example.rb [-t|--test|test]       - tests against 5000 recorded results of simulation.
 #  ruby refactoring_example.rb <ANY_NUMBER>           - shows result of simulation initialized with <ANY_NUMBER>.
 #  ruby refactoring_example.rb                        - shows result of random simulation.
-# 
+#
 # License: MIT (see at the end of the file)
 # This code is based on Trivia Game example used in Legacy Code Retreats
 # You can find it at https://github.com/jbrains/trivia
@@ -29,38 +30,61 @@
 class CorrectAnswerBehavior
 
   def was_correctly_answered
-    if @in_penalty_box[@current_player]
-      if @is_getting_out_of_penalty_box
-        puts "#{@players[@current_player]} got out of penalty box"
-        puts 'Answer was correct!!!!'
-        @purses[@current_player] += 1
-        puts "#{@players[@current_player]} now has #{@purses[@current_player]} Gold Coins."
-        winner = did_player_win()
-        @current_player += 1
-        @current_player = 0 if @current_player == @players.length
-        puts "Player is now #{@players[@current_player]}"
-        winner
+    signal_out_of_box(getting_out_of_penalty_box?) if player_is_in_penalty_box?
+
+    result =
+      if getting_out_of_penalty_box?
+        normal_turn
       else
-        puts "#{@players[@current_player]} stays in penalty box"
-        @current_player += 1
-        @current_player = 0 if @current_player == @players.length
-        puts "Player is now #{@players[@current_player]}"
         true
       end
+
+    next_player
+
+    result
+  end
+
+private
+
+  def player_is_in_penalty_box?
+    @in_penalty_box[@current_player]
+  end
+
+  def getting_out_of_penalty_box?
+    @is_getting_out_of_penalty_box
+  end
+
+  def normal_turn
+    signal_answer_was_correct
+    give_coin
+    did_player_win?
+  end
+
+  def signal_out_of_box(bool)
+    if bool
+      puts "#{@players[@current_player]} got out of penalty box"
     else
-      puts "Answer was corrent!!!!"
-      @purses[@current_player] += 1
-      puts "#{@players[@current_player]} now has #{@purses[@current_player]} Gold Coins."
-      winner = did_player_win
-      @current_player += 1
-      @current_player = 0 if @current_player == @players.length
-      puts "Player is now #{@players[@current_player]}"
-      return winner
+      puts "#{@players[@current_player]} stays in penalty box"
     end
   end
-private
-  def did_player_win
-    !(@purses[@current_player] == 6)
+
+  def signal_answer_was_correct
+    puts 'Answer was correct!!!!'
+  end
+
+  def next_player
+    @current_player += 1
+    @current_player = 0 if @current_player == @players.length
+    puts "Player is now #{@players[@current_player]}"
+  end
+
+  def give_coin
+    @purses[@current_player] += 1
+    puts "#{@players[@current_player]} now has #{@purses[@current_player]} Gold Coins."
+  end
+
+  def did_player_win?
+    @purses[@current_player] != 6
   end
 
 # ------------------------------ REFACTORING END ------------------------------
@@ -114,8 +138,8 @@ module StdOutToStringRedirector
   def self.redirect_stdout_to_string
     sio = StringIO.new
     old_stdout, $stdout = $stdout, sio
-    yield  
-    $stdout = old_stdout 
+    yield
+    $stdout = old_stdout
     sio.string
   end
 end
@@ -178,7 +202,7 @@ when "-t", "--test", "test"
   test_output
 when /\d(.\d+)?/
   run_simulation ARGV[0].to_f
-else 
+else
   run_simulation
 end
 
@@ -203,4 +227,3 @@ end
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
